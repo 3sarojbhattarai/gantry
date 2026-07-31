@@ -41,6 +41,8 @@ type Fake struct {
 	ContainerLogsErr    error
 	ContainerStatsErr   error
 	EventsErr           error
+	ExecErr             error
+	CreateErr           error
 }
 
 var _ docker.Client = (*Fake)(nil)

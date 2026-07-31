@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/containerdetail.tsx","./src/containersview.tsx","./src/createform.tsx","./src/execterminal.tsx","./src/resourceviews.tsx","./src/api.test.ts","./src/api.ts","./src/confirm.tsx","./src/hooks.ts","./src/main.tsx","./src/queries.ts","./src/specform.test.ts","./src/specform.ts","./src/toast.tsx","./src/types.ts","./src/ui.tsx"],"version":"5.9.3"}

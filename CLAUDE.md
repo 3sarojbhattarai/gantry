@@ -37,11 +37,12 @@ cmd/gantry/          main + cobra root (thin; delegates to internal/cli)
 internal/docker/     engine: Client interface (client.go), domain types
                      (types.go), sentinel errors (errors.go), moby impl (moby.go)
   fakedocker/        in-memory Client for daemon-free tests
-internal/cli/        one-shot cobra commands
-internal/tui/        Bubbletea UI (Phase 2)
-internal/api/        HTTP handlers, SSE, WebSocket exec (Phase 4)
-internal/web/        embed.FS for the built frontend (Phase 4)
-web/                 React + Vite + Tailwind CSS frontend (Phase 4)
+internal/cli/        one-shot cobra commands (+ exec, create, serve)
+internal/tui/        Bubbletea UI
+internal/termexec/   shared terminal attach (raw mode + resize) for exec
+internal/api/        HTTP handlers, SSE, WebSocket exec
+internal/web/        embed.FS for the built frontend
+web/                 React + Vite + Tailwind CSS frontend
 ```
 
 ## Conventions
@@ -56,9 +57,10 @@ web/                 React + Vite + Tailwind CSS frontend (Phase 4)
   or the stream ends. Callers own cancellation via context.
 - **Version** is injected at build time via
   `-ldflags "-X .../internal/cli.version=vX.Y.Z"`; it defaults to `dev`.
-- **Consent for destructive ops** lives in the engine (an explicit flag), not per
-  renderer. Renderers choose how to obtain it — `--force`, TUI modal, web dialog.
-  (Arrives in Phase 3; keep this in mind when touching mutation code.)
+- **Consent for destructive ops** lives in the engine: destructive methods take a
+  `docker.Consent` (zero value = not granted) and return `ErrConsentRequired`
+  without it. Renderers obtain consent their own way — `--force` in the CLI, a
+  confirmation modal in the TUI, a dialog on the web — and pass `docker.Confirm()`.
 
 ## Working with the plan
 
@@ -77,14 +79,19 @@ make test                      # unit tests (fake-backed, no daemon)
 make test-integration          # integration tests (needs a real daemon; Phase 1+)
 make check                     # fmt-check + vet + lint + test (matches CI)
 make run ARGS="version"        # go run with args
+make build-embed               # frontend + go build -tags embed (self-contained)
 
 # raw equivalents
 go build ./... && go vet ./... && go test ./...
 go run ./cmd/gantry --version
 ```
 
-Styling in the frontend is **Tailwind CSS** (Phase 4); keep styles utility-first
-rather than introducing a separate CSS framework.
+The web UI lives in `internal/api` (HTTP + SSE over the same `docker.Client`) and
+`web/` (React + Vite + **Tailwind CSS**). `gantry serve` runs it on `127.0.0.1`
+by default. The built frontend is embedded behind the `embed` build tag; plain
+`go build` uses a placeholder, so no Node toolchain is needed for the Go build.
+Keep frontend styles utility-first — don't add a second CSS framework. The API's
+JSON contract is the `json` tags on the domain types in `internal/docker`.
 
 ## Testing expectations
 

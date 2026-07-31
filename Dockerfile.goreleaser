@@ -1,0 +1,9 @@
+# Used by goreleaser's `dockers` step: it copies the already-built, frontend-
+# embedded binary into a minimal image. For a from-source build, see Dockerfile.
+FROM alpine:3.20
+RUN apk add --no-cache ca-certificates
+COPY gantry /usr/local/bin/gantry
+EXPOSE 8080
+# SECURITY: exposes full Docker control and requires the host socket — see README.
+ENTRYPOINT ["gantry"]
+CMD ["serve", "--addr", "0.0.0.0:8080"]

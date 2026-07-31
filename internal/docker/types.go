@@ -8,91 +8,104 @@ package docker
 
 import "time"
 
-// Container is the summary view of a container as shown in list output.
+// Container is the summary view of a container as shown in list output. JSON
+// tags define the wire contract the web frontend consumes.
 type Container struct {
-	ID      string
-	Names   []string
-	Image   string
-	ImageID string
-	Command string
-	Created time.Time
-	State   string // running, exited, paused, created, restarting, dead
-	Status  string // human-readable, e.g. "Up 3 hours"
-	Ports   []Port
-	Labels  map[string]string
+	ID      string            `json:"id"`
+	Names   []string          `json:"names"`
+	Image   string            `json:"image"`
+	ImageID string            `json:"imageId"`
+	Command string            `json:"command"`
+	Created time.Time         `json:"created"`
+	State   string            `json:"state"` // running, exited, paused, created, restarting, dead
+	Status  string            `json:"status"`
+	Ports   []Port            `json:"ports"`
+	Labels  map[string]string `json:"labels"`
 }
 
 // Port describes a single published or exposed port mapping.
 type Port struct {
-	IP      string
-	Private uint16
-	Public  uint16
-	Type    string // tcp, udp, sctp
+	IP      string `json:"ip"`
+	Private uint16 `json:"private"`
+	Public  uint16 `json:"public"`
+	Type    string `json:"type"` // tcp, udp, sctp
 }
 
 // ImageSummary is the summary view of an image as shown in list output.
 type ImageSummary struct {
-	ID       string
-	RepoTags []string
-	Created  time.Time
-	Size     int64
-	Labels   map[string]string
+	ID       string            `json:"id"`
+	RepoTags []string          `json:"repoTags"`
+	Created  time.Time         `json:"created"`
+	Size     int64             `json:"size"`
+	Labels   map[string]string `json:"labels"`
 }
 
 // Network is the summary view of a network.
 type Network struct {
-	ID       string
-	Name     string
-	Driver   string
-	Scope    string
-	Created  time.Time
-	Internal bool
-	Labels   map[string]string
+	ID       string            `json:"id"`
+	Name     string            `json:"name"`
+	Driver   string            `json:"driver"`
+	Scope    string            `json:"scope"`
+	Created  time.Time         `json:"created"`
+	Internal bool              `json:"internal"`
+	Labels   map[string]string `json:"labels"`
 }
 
 // Volume is the summary view of a volume.
 type Volume struct {
-	Name       string
-	Driver     string
-	Mountpoint string
-	Created    time.Time
-	Labels     map[string]string
+	Name       string            `json:"name"`
+	Driver     string            `json:"driver"`
+	Mountpoint string            `json:"mountpoint"`
+	Created    time.Time         `json:"created"`
+	Labels     map[string]string `json:"labels"`
 }
 
 // Stats is a single sampled resource-usage reading for a container.
 type Stats struct {
-	ContainerID string
-	CPUPercent  float64
-	MemUsage    uint64
-	MemLimit    uint64
-	MemPercent  float64
-	NetRx       uint64
-	NetTx       uint64
-	BlockRead   uint64
-	BlockWrite  uint64
-	PIDs        uint64
+	ContainerID string  `json:"containerId"`
+	CPUPercent  float64 `json:"cpuPercent"`
+	MemUsage    uint64  `json:"memUsage"`
+	MemLimit    uint64  `json:"memLimit"`
+	MemPercent  float64 `json:"memPercent"`
+	NetRx       uint64  `json:"netRx"`
+	NetTx       uint64  `json:"netTx"`
+	BlockRead   uint64  `json:"blockRead"`
+	BlockWrite  uint64  `json:"blockWrite"`
+	PIDs        uint64  `json:"pids"`
 }
 
 // Event is a single message from the daemon's event stream.
 type Event struct {
-	Type   string // container, image, network, volume
-	Action string // start, stop, die, create, destroy, ...
-	Actor  string // ID of the object the event concerns
-	Name   string // name of the object, when known
-	Time   time.Time
+	Type   string    `json:"type"`   // container, image, network, volume
+	Action string    `json:"action"` // start, stop, die, create, destroy, ...
+	Actor  string    `json:"actor"`  // ID of the object the event concerns
+	Name   string    `json:"name"`   // name of the object, when known
+	Time   time.Time `json:"time"`
 }
 
-// ContainerDetails is the full inspect view of a container. It is intentionally
-// thin in Phase 0 and fleshed out in Phase 1 when the read paths land; the
-// Client.InspectContainer signature is fixed now so the shape is stable.
+// ContainerDetails is the full inspect view of a container: the summary fields
+// plus the extra detail only the inspect endpoint returns.
 type ContainerDetails struct {
 	Container
+	Path         string    `json:"path"`
+	Args         []string  `json:"args"`
+	Env          []string  `json:"env"`
+	Platform     string    `json:"platform"`
+	RestartCount int       `json:"restartCount"`
+	ExitCode     int       `json:"exitCode"`
+	Error        string    `json:"error"`
+	StartedAt    time.Time `json:"startedAt"`
+	FinishedAt   time.Time `json:"finishedAt"`
 }
 
-// ImageDetails is the full inspect view of an image. Thin in Phase 0, fleshed
-// out in Phase 1 (see ContainerDetails).
+// ImageDetails is the full inspect view of an image: the summary fields plus
+// the extra detail only the inspect endpoint returns.
 type ImageDetails struct {
 	ImageSummary
+	RepoDigests  []string `json:"repoDigests"`
+	Architecture string   `json:"architecture"`
+	Os           string   `json:"os"`
+	Author       string   `json:"author"`
 }
 
 // LogOptions controls how container logs are read.
