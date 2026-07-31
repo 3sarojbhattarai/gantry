@@ -1,0 +1,96 @@
+# goreleaser configuration for gantry. See https://goreleaser.com
+# Validate with: goreleaser check
+# Dry run:       goreleaser release --snapshot --clean
+version: 2
+
+project_name: gantry
+
+before:
+  hooks:
+    - go mod tidy
+    # Build the frontend once; every Go target embeds the same web/dist.
+    - bash -c "cd web && npm ci && npm run build"
+
+builds:
+  - id: gantry
+    main: ./cmd/gantry
+    binary: gantry
+    env:
+      - CGO_ENABLED=0
+    tags:
+      - embed
+    ldflags:
+      - -s -w -X github.com/3sarojbhattarai/gantry/internal/cli.version={{ .Version }}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: gantry
+    formats: [tar.gz]
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+# Homebrew tap. Requires a github.com/3sarojbhattarai/homebrew-tap repo and a
+# HOMEBREW_TAP_GITHUB_TOKEN secret with write access to it.
+brews:
+  - name: gantry
+    repository:
+      owner: 3sarojbhattarai
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: "https://github.com/3sarojbhattarai/gantry"
+    description: "A single-binary Docker manager with a terminal and web UI"
+    license: "MIT"
+    test: |
+      system "#{bin}/gantry version"
+
+# Multi-arch Docker images built from the goreleaser-produced binaries.
+dockers:
+  - image_templates:
+      - "ghcr.io/3sarojbhattarai/gantry:{{ .Version }}-amd64"
+      - "ghcr.io/3sarojbhattarai/gantry:latest-amd64"
+    dockerfile: Dockerfile.goreleaser
+    use: buildx
+    goarch: amd64
+    build_flag_templates:
+      - "--platform=linux/amd64"
+  - image_templates:
+      - "ghcr.io/3sarojbhattarai/gantry:{{ .Version }}-arm64"
+      - "ghcr.io/3sarojbhattarai/gantry:latest-arm64"
+    dockerfile: Dockerfile.goreleaser
+    use: buildx
+    goarch: arm64
+    build_flag_templates:
+      - "--platform=linux/arm64"
+
+docker_manifests:
+  - name_template: "ghcr.io/3sarojbhattarai/gantry:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/3sarojbhattarai/gantry:{{ .Version }}-amd64"
+      - "ghcr.io/3sarojbhattarai/gantry:{{ .Version }}-arm64"
+  - name_template: "ghcr.io/3sarojbhattarai/gantry:latest"
+    image_templates:
+      - "ghcr.io/3sarojbhattarai/gantry:latest-amd64"
+      - "ghcr.io/3sarojbhattarai/gantry:latest-arm64"

@@ -1,4 +1,7 @@
-// Package tui will hold gantry's Bubbletea terminal UI: a pane list of
-// containers/images/networks/volumes, a detail view, and a log tail, driven
-// live by the daemon's event and stats streams. Introduced in Phase 2.
+// Package tui is gantry's Bubbletea terminal UI: a tabbed list of
+// containers/images/networks/volumes on the left, a detail pane on the right,
+// and a live log tail at the bottom. The daemon's event and stats streams,
+// plus container log streaming, are wired as Bubbletea commands so the view
+// updates itself rather than polling. Run takes over the terminal; the model,
+// update logic, and rendering live in the sibling files.
 package tui
